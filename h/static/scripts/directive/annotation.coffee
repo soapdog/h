@@ -141,6 +141,7 @@ AnnotationController = [
     #              if they are open.
     ###
     this.view = ->
+      window.top.document.getElementsByName('insert-comment')[0].title = "New Page Note"
       @editing = false
       @action = 'view'
 
