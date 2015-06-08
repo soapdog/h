@@ -13,7 +13,7 @@ from h.api.models import Annotation
 log = logging.getLogger(__name__)
 
 
-def build_query(request_params):
+def build_query(request_params, user_id=None):
     """Return an Elasticsearch query dict for the given h search API params.
 
     Translates the HTTP request params accepted by the h search API into an
@@ -22,6 +22,11 @@ def build_query(request_params):
     :param request_params: the HTTP request params that were posted to the
         h search API
     :type request_params: webob.multidict.NestedMultiDict
+
+    :param user_id: the ID of the authorized user (optional, default: None),
+        if a user_id is given then this user's annotations will never be
+        filtered out even if they have a NIPSA flag
+    :type user_id: unicode or None
 
     :returns: an Elasticsearch query dict corresponding to the given h search
         API params
@@ -74,16 +79,18 @@ def build_query(request_params):
         matches.append({"match": {key: value}})
     matches = matches or [{"match_all": {}}]
 
+    # If any one of these "should" clauses is true then the annotation will
+    # get through the filter.
+    should_clauses = [{"not": {"term": {"not_in_public_site_areas": True}}}]
+
+    if user_id:
+        # Always show the logged-in user's annotations even if they have nipsa.
+        should_clauses.append({"term": {"user": user_id}})
+
     # Filter out NIPSA'd annotations.
     query["query"] = {
         "filtered": {
-            "filter": {
-                "not": {
-                    "term": {
-                        "not_in_public_site_areas": True
-                    }
-                }
-            },
+            "filter": {"bool": {"should": should_clauses}},
             "query": {"bool": {"must": matches}}
         }
     }
@@ -106,11 +113,11 @@ def search(request_params, user=None):
     :rtype: dict
 
     """
+    user_id = user.id if user else None
     log.debug("Searching with user=%s, for uri=%s",
-              user.id if user else 'None',
-              request_params.get('uri'))
+              str(user_id), request_params.get('uri'))
 
-    query = build_query(request_params)
+    query = build_query(request_params, user_id)
     results = Annotation.search_raw(query, user=user)
     count = Annotation.search_raw(query, {'search_type': 'count'},
                                   raw_result=True)

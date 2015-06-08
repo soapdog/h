@@ -317,12 +317,19 @@ def test_build_query_filters_out_nipsad_annotations():
     query = search.build_query(multidict.NestedMultiDict())
 
     assert query["query"]["filtered"]["filter"] == {
-        "not": {
-            "term": {
-                "not_in_public_site_areas": True
-            }
+        "bool": {
+            "should": [
+                {'not': {'term': {'not_in_public_site_areas': True}}}
+            ]
         }
     }
+
+
+def test_build_query_users_own_annotations_are_not_filtered():
+    query = search.build_query(multidict.NestedMultiDict(), user_id="fred")
+
+    assert {'term': {'user': 'fred'}} in (
+        query["query"]["filtered"]["filter"]["bool"]["should"])
 
 
 @mock.patch("annotator.annotation.Annotation.search_raw")
