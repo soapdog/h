@@ -74,7 +74,19 @@ def build_query(request_params):
         matches.append({"match": {key: value}})
     matches = matches or [{"match_all": {}}]
 
-    query["query"] = {"bool": {"must": matches}}
+    # Filter out NIPSA'd annotations.
+    query["query"] = {
+        "filtered": {
+            "filter": {
+                "not": {
+                    "term": {
+                        "not_in_public_site_areas": True
+                    }
+                }
+            },
+            "query": {"bool": {"must": matches}}
+        }
+    }
 
     return query
 
