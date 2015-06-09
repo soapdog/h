@@ -53,6 +53,24 @@ class Client(object):
 
         self.timeout = timeout or 0.2
 
+    def _request(self, method, path, params):
+        url = urlparse.urljoin(self.base_url, path.lstrip("/"))
+        try:
+            response = requests.request(
+                method, url, params=params,timeout=self.timeout)
+        except requests.exceptions.ConnectionError as err:
+            raise ConnectionError(err)
+        except requests.exceptions.Timeout as err:
+            raise Timeout(err)
+        except requests.exceptions.RequestException as err:
+            raise APIError(err)
+
+        try:
+            return response.json()
+        except ValueError as err:
+            import ipdb; ipdb.set_trace()
+            raise APIError(err)
+
     def get(self, path, params=None):
         """Make a GET request to the Hypothesis API and return the response.
 
@@ -66,17 +84,22 @@ class Client(object):
         :type params: dict
 
         """
-        url = urlparse.urljoin(self.base_url, path.lstrip("/"))
-        try:
-            response = requests.get(url, params=params, timeout=self.timeout)
-        except requests.exceptions.ConnectionError as err:
-            raise ConnectionError(err)
-        except requests.exceptions.Timeout as err:
-            raise Timeout(err)
-        except requests.exceptions.RequestException as err:
-            raise APIError(err)
+        return self._request("GET", path, params)
 
-        try:
-            return response.json()
-        except ValueError as err:
-            raise APIError(err)
+    def put(self, path, params=None):
+        """Make a PUT request to the Hypothesis API and return the response.
+
+        :returns: the JSON response from the API as a Python object
+        :rtype: dict or list
+
+        :param path: The API path to request, for example: ``"/search"``.
+
+        :param params: The params to pass in the URL's query string,
+            for example: ``{"limit": 10}``.
+        :type params: dict
+
+        """
+        return self._request("PUT", path, params)
+
+    def delete(self, path, params=None):
+        return self._request("DELETE", path, params)
