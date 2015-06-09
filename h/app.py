@@ -48,6 +48,7 @@ def create_app(global_config, **settings):
     config.include('h.views')
     config.include('h.renderers')
     config.include('h.api_client')
+    config.include('h.nipsa')
 
     config.include('pyramid_jinja2')
     config.add_jinja2_renderer('.js')

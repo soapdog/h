@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>NIPSA</title>
+  </head>
+  <body>
+
+  <form method="POST">
+    <input type="text" name="add"></input>
+    <input type="submit" value="Add"></input>
+
+    <ul>
+      {% for user_id in user_ids %}
+        <li>
+          {{ user_id }}
+          <button type="submit" name="remove" value="{{ user_id }}"
+                  formaction="{{ request.route_url('nipsa_user_delete') }}">
+            remove
+          </button>
+        </li>
+      {% endfor %}
+    </ul>
+  </form>
+
+  </body>
+</html>
