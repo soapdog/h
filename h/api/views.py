@@ -12,6 +12,7 @@ from h.api.models import Annotation
 from h.api.resources import Root
 from h.api.resources import Annotations
 import h.api.search
+from h.api.nipsa import models as nipsa_models
 
 log = logging.getLogger(__name__)
 
@@ -202,6 +203,18 @@ def _api_error(request, reason, status_code):
     return response_info
 
 
+def _nipsa(user_id):
+    """Return True if the given user ID is on the NIPSA list.
+
+    False otherwise.
+
+    """
+    if nipsa_models.user_read(user_id):
+        return True
+    else:
+        return False
+
+
 def _create_annotation(fields, user):
     """Create and store an annotation."""
 
@@ -214,6 +227,9 @@ def _create_annotation(fields, user):
 
     annotation['user'] = user.id
     annotation['consumer'] = user.consumer.key
+
+    if _nipsa(user.id):
+        annotation["not_in_public_site_areas"] = True
 
     # Save it in the database
     annotation.save()
