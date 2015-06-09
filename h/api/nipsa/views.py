@@ -54,9 +54,12 @@ def user_create(request):
     """
     user_id = request.matchdict["user_id"]
     models.user_create(user_id)
-    request.get_queue_writer().publish(
-        "nipsa_user_requests",
-        json.dumps({"action": "nipsa", "user_id": user_id}))
+
+    if request.registry.feature("queue"):
+        request.get_queue_writer().publish(
+            "nipsa_user_requests",
+            json.dumps({"action": "nipsa", "user_id": user_id}))
+    return {"user_id": user_id}
 
 
 @view.view_config(renderer='json', route_name='nipsa_user',
@@ -69,9 +72,11 @@ def user_delete(request):
     """
     user_id = request.matchdict["user_id"]
     models.user_delete(user_id)
-    request.get_queue_writer().publish(
-        "nipsa_user_requests",
-        json.dumps({"action": "unnipsa", "user_id": user_id}))
+
+    if request.registry.feature("queue"):
+        request.get_queue_writer().publish(
+            "nipsa_user_requests",
+            json.dumps({"action": "unnipsa", "user_id": user_id}))
 
 
 @view.view_config(renderer='json', route_name='nipsa_user',
