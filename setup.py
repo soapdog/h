@@ -145,6 +145,7 @@ setup(
         ],
         'h.worker': [
             'notification=h.notification.worker:run',
+            'nipsa_user=h.api.nipsa.worker:user_worker',
         ]
     },
 )

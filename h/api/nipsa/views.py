@@ -26,6 +26,7 @@ prefix, for for example <https://hypothes.is/api/nipsa/user> not
 <https://hypothes.is/nipsa/user>.
 
 """
+import json
 from pyramid import view
 
 from h.api.nipsa import models
@@ -51,7 +52,11 @@ def user_create(request):
     If the user is already NIPSA'd then nothing will happen.
 
     """
-    models.user_create(request.matchdict["user_id"])
+    user_id = request.matchdict["user_id"]
+    models.user_create(user_id)
+    request.get_queue_writer().publish(
+        "nipsa_user_requests",
+        json.dumps({"action": "nipsa", "user_id": user_id}))
 
 
 @view.view_config(renderer='json', route_name='nipsa_user',
@@ -62,7 +67,11 @@ def user_delete(request):
     If the user isn't NIPSA'd then nothing will happen.
 
     """
-    models.user_delete(request.matchdict["user_id"])
+    user_id = request.matchdict["user_id"]
+    models.user_delete(user_id)
+    request.get_queue_writer().publish(
+        "nipsa_user_requests",
+        json.dumps({"action": "unnipsa", "user_id": user_id}))
 
 
 @view.view_config(renderer='json', route_name='nipsa_user',
