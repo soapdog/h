@@ -105,6 +105,7 @@ def create_api(global_config, **settings):
     config.include('h.auth')
     config.include('h.api.db')
     config.include('h.api.views')
+    config.include('h.api.nipsa')
 
     if config.registry.feature('queue'):
         config.include('h.queue')
