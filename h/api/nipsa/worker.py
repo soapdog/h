@@ -1,6 +1,7 @@
 """Worker functions for the NIPSA feature."""
 import json
 
+import annotator
 import elasticsearch
 import elasticsearch.helpers
 
@@ -34,7 +35,7 @@ def _nipsa_user(user_id):
                                                  fields=[]):
         actions.append({
             "_op_type": "update",
-            "_index": "annotator",
+            "_index": annotator.es.index,
             "_type": "annotation",
             "_id": annotation["_id"],
             "doc": {
@@ -67,7 +68,7 @@ def _unnipsa_user(user_id):
                                                  fields=[]):
         actions.append({
             "_op_type": "update",
-            "_index": "annotator",
+            "_index": annotator.es.index,
             "_type": "annotation",
             "_id": annotation["_id"],
             "script": "ctx._source.remove(\"not_in_public_site_areas\")",
