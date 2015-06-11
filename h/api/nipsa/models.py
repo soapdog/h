@@ -43,11 +43,9 @@ def _user_read(user_id):
 
 
 def user_read(user_id):
-    """Return the given user ID if the user is NIPSA'd, False otherwise."""
-    if _user_read(user_id):
-        return user_id
-    else:
-        return False
+    """Return the given user ID if the user is NIPSA'd, None otherwise."""
+    nipsa_user = _user_read(user_id)
+    return nipsa_user.user_id if nipsa_user else None
 
 
 def user_create(user_id):
