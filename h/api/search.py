@@ -4,6 +4,7 @@ All search (Annotation.search(), Annotation.search_raw()) and Elasticsearch
 stuff should be encapsulated in this module.
 
 """
+import copy
 import logging
 
 import webob.multidict
@@ -11,6 +12,57 @@ import webob.multidict
 from h.api.models import Annotation
 
 log = logging.getLogger(__name__)
+
+
+def nipsa_filter(query, user_id=None):
+    """Return a NIPSA-filtered copy of the given query dict.
+
+    Given an Elasticsearch query dict like this:
+
+        query = {"query": {...}}
+
+    return a filtered query dict like this:
+
+        query = {
+            "query": {
+                "filtered": {
+                    "filter": {...},
+                    "query": <the original query>
+                }
+            }
+        }
+
+    where the filter is one that filters out all NIPSA'd annotations.
+
+    Returns a new dict, doesn't modify the given dict.
+
+    :param query: The query to return a filtered copy of
+    :type query: dict
+
+    :param user_id: The ID of a user whose annotations should not be filtered.
+        The returned filtered query won't filter out this user's annotations,
+        even if the annotations have the NIPSA flag.
+    :type user_id: unicode
+
+    """
+    query = copy.deepcopy(query)
+
+    # If any one of these "should" clauses is true then the annotation will
+    # get through the filter.
+    should_clauses = [{"not": {"term": {"not_in_public_site_areas": True}}}]
+
+    if user_id:
+        # Always show the logged-in user's annotations even if they have nipsa.
+        should_clauses.append({"term": {"user": user_id}})
+
+    query["query"] = {
+        "filtered": {
+            "filter": {"bool": {"should": should_clauses}},
+            "query": query["query"]
+        }
+    }
+
+    return query
 
 
 def build_query(request_params, user_id=None):
@@ -79,23 +131,9 @@ def build_query(request_params, user_id=None):
         matches.append({"match": {key: value}})
     matches = matches or [{"match_all": {}}]
 
-    # If any one of these "should" clauses is true then the annotation will
-    # get through the filter.
-    should_clauses = [{"not": {"term": {"not_in_public_site_areas": True}}}]
+    query["query"] = {"bool": {"must": matches}}
 
-    if user_id:
-        # Always show the logged-in user's annotations even if they have nipsa.
-        should_clauses.append({"term": {"user": user_id}})
-
-    # Filter out NIPSA'd annotations.
-    query["query"] = {
-        "filtered": {
-            "filter": {"bool": {"should": should_clauses}},
-            "query": {"bool": {"must": matches}}
-        }
-    }
-
-    return query
+    return nipsa_filter(query, user_id)
 
 
 def search(request_params, user=None):

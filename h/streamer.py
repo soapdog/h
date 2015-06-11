@@ -23,6 +23,7 @@ from ws4py.websocket import WebSocket as _WebSocket
 from ws4py.server.wsgiutils import WebSocketWSGIApplication
 
 from .api.auth import get_user  # FIXME: should not import from .api
+from h.api import search
 from annotator import document
 from .models import Annotation
 
@@ -110,21 +111,9 @@ class FilterToElasticFilter(object):
             scripts = ' AND '.join(self.filter_scripts_to_add)
             self.query['filter']['script'] = '"script": ' + scripts
 
-        should_clauses = [
-            {"not": {"term": {"not_in_public_site_areas": True}}}]
+        self.query = search.nipsa_filter(
+            self.query, request.authenticated_userid)
 
-        if request.authenticated_userid:
-            # Always show the logged-in user's annotations even if they have
-            # nipsa.
-            should_clauses.append(
-                {"term": {"user": request.authenticated_userid}})
-
-        self.query["query"] = {
-            "filtered": {
-                "filter": {"bool": {"should": should_clauses}},
-                "query": self.query["query"]
-            }
-        }
 
     @staticmethod
     def equals(field, value):
