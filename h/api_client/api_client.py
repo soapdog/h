@@ -57,7 +57,7 @@ class Client(object):
         url = urlparse.urljoin(self.base_url, path.lstrip("/"))
         try:
             response = requests.request(
-                method, url, params=params,timeout=self.timeout)
+                method, url, params=params, timeout=self.timeout)
         except requests.exceptions.ConnectionError as err:
             raise ConnectionError(err)
         except requests.exceptions.Timeout as err:
