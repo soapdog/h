@@ -68,7 +68,6 @@ class Client(object):
         try:
             return response.json()
         except ValueError as err:
-            import ipdb; ipdb.set_trace()
             raise APIError(err)
 
     def get(self, path, params=None):
