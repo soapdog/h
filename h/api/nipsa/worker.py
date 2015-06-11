@@ -1,12 +1,8 @@
 """Worker functions for the NIPSA feature."""
 import json
-import logging
 
 import elasticsearch
 import elasticsearch.helpers
-
-
-LOGGER = logging.getLogger('h.worker')
 
 
 def _es_client():
@@ -46,10 +42,7 @@ def _nipsa_user(user_id):
             },
         })
 
-    try:
-        elasticsearch.helpers.bulk(es_client, actions)
-    except elasticsearch.helpers.BulkIndexError as err:
-        LOGGER.debug(err)
+    elasticsearch.helpers.bulk(es_client, actions)
 
 
 def _unnipsa_user(user_id):
@@ -80,10 +73,7 @@ def _unnipsa_user(user_id):
             "script": "ctx._source.remove(\"not_in_public_site_areas\")",
         })
 
-    try:
-        elasticsearch.helpers.bulk(es_client, actions)
-    except elasticsearch.helpers.BulkIndexError as err:
-        LOGGER.debug(err)
+    elasticsearch.helpers.bulk(es_client, actions)
 
 
 def _handle_message(_, message):
