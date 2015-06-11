@@ -44,7 +44,6 @@ def _nipsa_user(user_id):
             "doc": {
                 "not_in_public_site_areas": True
             },
-            "fields": "",
         })
 
     try:
@@ -79,7 +78,6 @@ def _unnipsa_user(user_id):
             "_type": "annotation",
             "_id": annotation["_id"],
             "script": "ctx._source.remove(\"not_in_public_site_areas\")",
-            "fields": "",
         })
 
     try:
