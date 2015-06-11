@@ -51,6 +51,9 @@ def replace_io(monkeypatch):
     monkeypatch.setattr(views, 'Annotation', DictMock())
     monkeypatch.setattr(views, '_publish_annotation_event', MagicMock())
     monkeypatch.setattr(views, '_api_error', MagicMock())
+    _nipsa = Mock()
+    _nipsa.return_value = False
+    monkeypatch.setattr(views, '_nipsa', _nipsa)
 
 
 @fixture()
