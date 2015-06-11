@@ -84,8 +84,7 @@ def user_worker(request):
     of the NIPSA'd user's annotations.
 
     """
-    if request.registry.feature("queue"):
-        reader = request.get_queue_reader(
-            "nipsa_user_requests", "nipsa_users_annotations")
-        reader.on_message.connect(_handle_message)
-        reader.start(block=True)
+    reader = request.get_queue_reader(
+        "nipsa_user_requests", "nipsa_users_annotations")
+    reader.on_message.connect(_handle_message)
+    reader.start(block=True)
