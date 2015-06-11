@@ -34,7 +34,8 @@ def _nipsa_user(user_id):
 
     es_client = _es_client()
     actions = []
-    for annotation in elasticsearch.helpers.scan(es_client, query=query):
+    for annotation in elasticsearch.helpers.scan(es_client, query=query,
+                                                 fields=[]):
         actions.append({
             "_op_type": "update",
             "_index": "annotator",
@@ -70,7 +71,8 @@ def _unnipsa_user(user_id):
 
     es_client = _es_client()
     actions = []
-    for annotation in elasticsearch.helpers.scan(es_client, query=query):
+    for annotation in elasticsearch.helpers.scan(es_client, query=query,
+                                                 fields=[]):
         actions.append({
             "_op_type": "update",
             "_index": "annotator",
