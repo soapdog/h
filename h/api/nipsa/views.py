@@ -59,8 +59,6 @@ def user_create(request):
         "nipsa_user_requests",
         json.dumps({"action": "nipsa", "user_id": user_id}))
 
-    return {"user_id": user_id}
-
 
 @view.view_config(renderer='json', route_name='nipsa_user',
                   request_method='DELETE')
