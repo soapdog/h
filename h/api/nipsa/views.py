@@ -9,7 +9,7 @@ To get a list of all the NIPSA'd user IDs:
 
 To add user ID "acct:fred@hypothes.is" to the list:
 
-    POST /nipsa/user/acct:fred@hypothes.is
+    PUT /nipsa/user/acct:fred@hypothes.is
 
 To delete user ID "acct:fred@hypothes.is" from the list:
 
@@ -27,6 +27,7 @@ prefix, for for example <https://hypothes.is/api/nipsa/user> not
 
 """
 import json
+import pyramid_basemodel
 from pyramid import view
 
 from h.api.nipsa import models
@@ -40,7 +41,7 @@ def user_index(_):
     :rtype: list of unicode strings
 
     """
-    return models.user_index()
+    return [nipsa_user.user_id for nipsa_user in models.all_users()]
 
 
 @view.view_config(renderer='json', route_name='nipsa_user',
@@ -49,11 +50,16 @@ def user_create(request):
     """NIPSA a user.
 
     Add the given user's ID to the list of NIPSA'd user IDs.
-    If the user is already NIPSA'd then nothing will happen.
+    If the user is already NIPSA'd then nothing will happen (but a "nipsa"
+    message for the user will still be published to the queue).
 
     """
     user_id = request.matchdict["user_id"]
-    models.user_create(user_id)
+
+    nipsa_user = models.get_user(user_id)
+    if not nipsa_user:
+        nipsa_user = models.NipsaUser(user_id)
+        pyramid_basemodel.Session.add(nipsa_user)
 
     request.get_queue_writer().publish(
         "nipsa_user_requests",
@@ -65,11 +71,15 @@ def user_create(request):
 def user_delete(request):
     """Un-NIPSA a user.
 
-    If the user isn't NIPSA'd then nothing will happen.
+    If the user isn't NIPSA'd then nothing will happen (but an "unnipsa"
+    message for the user will still be published to the queue).
 
     """
     user_id = request.matchdict["user_id"]
-    models.user_delete(user_id)
+
+    nipsa_user = models.get_user(user_id)
+    if nipsa_user:
+        pyramid_basemodel.Session.delete(nipsa_user)
 
     request.get_queue_writer().publish(
         "nipsa_user_requests",
@@ -80,9 +90,11 @@ def user_delete(request):
                   request_method='GET')
 def user_read(request):
     """Return 200 OK if the given user is on the NIPSA list, 404 if not."""
-    user_id = models.user_read(request.matchdict["user_id"])
-    if user_id:
-        return user_id
+    user_id = request.matchdict["user_id"]
+
+    user_nipsa = models.get_user(user_id)
+    if user_nipsa:
+        return user_nipsa.user_id
     else:
         request.response.status = 404
         request.response.content_type = "application/json"

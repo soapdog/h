@@ -12,6 +12,9 @@ from h.auth import acl_authz, remote_authn, session_authn
 from h.config import settings_from_environment
 from h.security import derive_key
 
+# This import is needed to get pyramid_basemodel to create the nipsa db tables.
+import h.api.nipsa.models  # pylint: disable=unused-import
+
 log = logging.getLogger(__name__)
 
 
