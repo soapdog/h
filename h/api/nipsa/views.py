@@ -27,10 +27,14 @@ prefix, for for example <https://hypothes.is/api/nipsa/user> not
 
 """
 import json
-import pyramid_basemodel
+from pyramid_basemodel import Session
 from pyramid import view
 
 from h.api.nipsa.models import NipsaUser
+
+
+def _publish(request, data):
+    request.get_queue_writer().publish("nipsa_user_requests", data)
 
 
 @view.view_config(renderer='json', route_name='nipsa_user_index',
@@ -59,11 +63,9 @@ def user_create(request):
     nipsa_user = NipsaUser.get_by_id(user_id)
     if not nipsa_user:
         nipsa_user = NipsaUser(user_id)
-        pyramid_basemodel.Session.add(nipsa_user)
+        Session.add(nipsa_user)
 
-    request.get_queue_writer().publish(
-        "nipsa_user_requests",
-        json.dumps({"action": "nipsa", "user_id": user_id}))
+    _publish(request, json.dumps({"action": "nipsa", "user_id": user_id}))
 
 
 @view.view_config(renderer='json', route_name='nipsa_user',
@@ -79,11 +81,9 @@ def user_delete(request):
 
     nipsa_user = NipsaUser.get_by_id(user_id)
     if nipsa_user:
-        pyramid_basemodel.Session.delete(nipsa_user)
+        Session.delete(nipsa_user)
 
-    request.get_queue_writer().publish(
-        "nipsa_user_requests",
-        json.dumps({"action": "unnipsa", "user_id": user_id}))
+    _publish(request, json.dumps({"action": "unnipsa", "user_id": user_id}))
 
 
 @view.view_config(renderer='json', route_name='nipsa_user',
