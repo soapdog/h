@@ -14,16 +14,16 @@ class NipsaUser(pyramid_basemodel.Base):
     def __init__(self, user_id):
         self.user_id = user_id
 
+    @classmethod
+    def get_by_id(cls, user_id):
+        """Return the NipsaUser object for the given user_id, or None."""
+        try:
+            return pyramid_basemodel.Session.query(cls).filter(
+                cls.user_id == user_id).one()
+        except exc.NoResultFound:
+            return None
 
-def get_user(user_id):
-    """Return the NipsaUser object for the given user_id, or None."""
-    try:
-        return pyramid_basemodel.Session.query(NipsaUser).filter(
-            NipsaUser.user_id == user_id).one()
-    except exc.NoResultFound:
-        return None
-
-
-def all_users():
-    """Return a list of all NipsaUser objects in the db."""
-    return pyramid_basemodel.Session.query(NipsaUser).all()
+    @classmethod
+    def all(cls):
+        """Return a list of all NipsaUser objects in the db."""
+        return pyramid_basemodel.Session.query(cls).all()

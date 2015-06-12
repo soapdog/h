@@ -30,7 +30,7 @@ import json
 import pyramid_basemodel
 from pyramid import view
 
-from h.api.nipsa import models
+from h.api.nipsa.models import NipsaUser
 
 
 @view.view_config(renderer='json', route_name='nipsa_user_index',
@@ -41,7 +41,7 @@ def user_index(_):
     :rtype: list of unicode strings
 
     """
-    return [nipsa_user.user_id for nipsa_user in models.all_users()]
+    return [nipsa_user.user_id for nipsa_user in NipsaUser.all()]
 
 
 @view.view_config(renderer='json', route_name='nipsa_user',
@@ -56,9 +56,9 @@ def user_create(request):
     """
     user_id = request.matchdict["user_id"]
 
-    nipsa_user = models.get_user(user_id)
+    nipsa_user = NipsaUser.get_by_id(user_id)
     if not nipsa_user:
-        nipsa_user = models.NipsaUser(user_id)
+        nipsa_user = NipsaUser(user_id)
         pyramid_basemodel.Session.add(nipsa_user)
 
     request.get_queue_writer().publish(
@@ -77,7 +77,7 @@ def user_delete(request):
     """
     user_id = request.matchdict["user_id"]
 
-    nipsa_user = models.get_user(user_id)
+    nipsa_user = NipsaUser.get_by_id(user_id)
     if nipsa_user:
         pyramid_basemodel.Session.delete(nipsa_user)
 
@@ -92,7 +92,7 @@ def user_read(request):
     """Return 200 OK if the given user is on the NIPSA list, 404 if not."""
     user_id = request.matchdict["user_id"]
 
-    user_nipsa = models.get_user(user_id)
+    user_nipsa = NipsaUser.get_by_id(user_id)
     if user_nipsa:
         return user_nipsa.user_id
     else:
