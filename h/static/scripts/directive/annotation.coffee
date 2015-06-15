@@ -311,6 +311,10 @@ AnnotationController = [
       updateTimestamp = angular.noop
       drafts.remove model
 
+    # Called by the privacy directive.
+    $scope.setLevel = (level) ->
+      $scope.level = level
+
     # Watch the model.
     # XXX: TODO: don't clobber the view when collaborating
     $scope.$watch (-> model), (model, old) =>

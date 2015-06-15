@@ -50,6 +50,7 @@ module.exports = ['localStorage', 'permissions', (localStorage, permissions) ->
         controller.$setViewValue level
 
       scope.level = controller.$viewValue
+      scope.$parent.setLevel(scope.level)
 
     scope.levels = levels
     scope.setLevel = (level) ->

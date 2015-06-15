@@ -97,6 +97,13 @@
 </div>
 <!-- / Tags -->
 
+<div class="annotation-section small" ng-if="vm.editing">
+  <p ng-show="level.text == 'Only Me'">
+    <i class="h-icon-lock"></i> This annotation is viewable only to you.</p>
+  <p ng-show="level.text == 'Public'">
+    <i class="h-icon-public"></i> This annotation is viewable to everyone.</p>
+</div>
+
 <div class="annotation-section form-actions"
         ng-if="vm.editing"
         ng-switch="vm.action">
