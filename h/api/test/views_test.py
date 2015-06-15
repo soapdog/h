@@ -112,6 +112,14 @@ def test_create_annotation(user):
     annotation.save.assert_called_once()
 
 
+def test_create_annotation_adds_nipsa_flag():
+    pass
+
+
+def test_create_annotation_does_not_add_nipsa_flag():
+    pass
+
+
 @pytest.mark.usefixtures('replace_io')
 def test_read():
     annotation = DummyResource()

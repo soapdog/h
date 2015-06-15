@@ -5,36 +5,7 @@ import annotator
 import elasticsearch
 import elasticsearch.helpers
 
-
-def _query_for_users_annotations(user_id):
-    """Return an Elasticsearch query for all the given user's annotations."""
-    return {
-        "query": {
-            "filtered": {
-                "filter": {
-                    "bool": {
-                        "must": [{"term": {"user": user_id}}]
-                    }
-                }
-            }
-        }
-    }
-
-
-def _nipsad_annotations(user_id):
-    """Return an Elasticsearch query for the user's NIPSA's annotations."""
-    query = _query_for_users_annotations(user_id)
-    query["query"]["filtered"]["filter"]["bool"]["must"].append(
-        {"term": {"not_in_public_site_areas": True}})
-    return query
-
-
-def _not_nipsad_annotations(user_id):
-    """Return an Elasticsearch query for the user's non-NIPSA's annotations."""
-    query = _query_for_users_annotations(user_id)
-    query["query"]["filtered"]["filter"]["bool"]["must"].append(
-        {"not": {"term": {"not_in_public_site_areas": True}}})
-    return query
+from h.api import search
 
 
 def _add_nipsa_action(annotation):
@@ -69,9 +40,9 @@ def _add_or_remove_nipsa(user_id, action):
     assert action in ("nipsa", "unnipsa")
 
     if action == "nipsa":
-        query = _not_nipsad_annotations(user_id)
+        query = search.not_nipsad_annotations(user_id)
     else:
-        query = _nipsad_annotations(user_id)
+        query = search.nipsad_annotations(user_id)
 
     es_client = _es_client()
 

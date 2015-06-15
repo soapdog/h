@@ -4,35 +4,6 @@ import mock
 from h.api.nipsa import worker
 
 
-def test_nipsad_annotations_filters_by_user_id():
-    query = worker._nipsad_annotations("test_user_id")
-
-    must_clauses = query["query"]["filtered"]["filter"]["bool"]["must"]
-    assert {"term": {"user": "test_user_id"}} in must_clauses
-
-
-def test_not_nipsad_annotatopns_filters_by_user_id():
-    query = worker._not_nipsad_annotations("test_user_id")
-
-    must_clauses = query["query"]["filtered"]["filter"]["bool"]["must"]
-    assert {"term": {"user": "test_user_id"}} in must_clauses
-
-
-def test_nipsad_annotations_filters_by_nipsa():
-    query = worker._nipsad_annotations("test_user_id")
-
-    must_clauses = query["query"]["filtered"]["filter"]["bool"]["must"]
-    assert {"term": {"not_in_public_site_areas": True}} in must_clauses
-
-
-def test_not_nipsad_annotations_filters_by_nipsa():
-    query = worker._not_nipsad_annotations("test_user_id")
-
-    must_clauses = query["query"]["filtered"]["filter"]["bool"]["must"]
-    assert {"not": {"term": {"not_in_public_site_areas": True}}} in (
-        must_clauses)
-
-
 def test_add_nipsa_action():
     action = worker._add_nipsa_action({"_id": "test_id"})
 
@@ -89,42 +60,42 @@ def test_add_or_remove_nipsa_passes_elasticsearch_client_to_bulk(
     assert helpers.bulk.call_args[0][0] == es_client
 
 
-@mock.patch("h.api.nipsa.worker._not_nipsad_annotations")
+@mock.patch("h.api.search.not_nipsad_annotations")
 @mock.patch("elasticsearch.Elasticsearch")
 @mock.patch("elasticsearch.helpers")
-def test_add_nipsa_gets_query(helpers, elasticsearch, _not_nipsad_annotations):
+def test_add_nipsa_gets_query(helpers, elasticsearch, not_nipsad_annotations):
     worker._add_or_remove_nipsa("test_user_id", "nipsa")
 
-    _not_nipsad_annotations.assert_called_once_with("test_user_id")
+    not_nipsad_annotations.assert_called_once_with("test_user_id")
 
 
-@mock.patch("h.api.nipsa.worker._nipsad_annotations")
+@mock.patch("h.api.search.nipsad_annotations")
 @mock.patch("elasticsearch.Elasticsearch")
 @mock.patch("elasticsearch.helpers")
-def test_remove_nipsa_gets_query(helpers, elasticsearch, _nipsad_annotations):
+def test_remove_nipsa_gets_query(helpers, elasticsearch, nipsad_annotations):
     worker._add_or_remove_nipsa("test_user_id", "unnipsa")
 
-    _nipsad_annotations.assert_called_once_with("test_user_id")
+    nipsad_annotations.assert_called_once_with("test_user_id")
 
 
-@mock.patch("h.api.nipsa.worker._not_nipsad_annotations")
+@mock.patch("h.api.search.not_nipsad_annotations")
 @mock.patch("elasticsearch.Elasticsearch")
 @mock.patch("elasticsearch.helpers")
-def test_add_nipsa_passes_query_to_scan(helpers, _, _not_nipsad_annotations):
+def test_add_nipsa_passes_query_to_scan(helpers, _, not_nipsad_annotations):
     query = mock.MagicMock()
-    _not_nipsad_annotations.return_value = query
+    not_nipsad_annotations.return_value = query
 
     worker._add_or_remove_nipsa("test_user_id", "nipsa")
 
     assert helpers.scan.call_args[1]["query"] == query
 
 
-@mock.patch("h.api.nipsa.worker._nipsad_annotations")
+@mock.patch("h.api.search.nipsad_annotations")
 @mock.patch("elasticsearch.Elasticsearch")
 @mock.patch("elasticsearch.helpers")
-def test_remove_nipsa_passes_query_to_scan(helpers, _, _nipsad_annotations):
+def test_remove_nipsa_passes_query_to_scan(helpers, _, nipsad_annotations):
     query = mock.MagicMock()
-    _nipsad_annotations.return_value = query
+    nipsad_annotations.return_value = query
 
     worker._add_or_remove_nipsa("test_user_id", "unnipsa")
 

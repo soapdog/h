@@ -356,3 +356,32 @@ def test_index_limit_is_20(search_func):
 
     first_call = search_func.call_args_list[0]
     assert first_call[0][0]["limit"] == 20
+
+
+def test_nipsad_annotations_filters_by_user_id():
+    query = search.nipsad_annotations("test_user_id")
+
+    must_clauses = query["query"]["filtered"]["filter"]["bool"]["must"]
+    assert {"term": {"user": "test_user_id"}} in must_clauses
+
+
+def test_not_nipsad_annotatopns_filters_by_user_id():
+    query = search.not_nipsad_annotations("test_user_id")
+
+    must_clauses = query["query"]["filtered"]["filter"]["bool"]["must"]
+    assert {"term": {"user": "test_user_id"}} in must_clauses
+
+
+def test_nipsad_annotations_filters_by_nipsa():
+    query = search.nipsad_annotations("test_user_id")
+
+    must_clauses = query["query"]["filtered"]["filter"]["bool"]["must"]
+    assert {"term": {"not_in_public_site_areas": True}} in must_clauses
+
+
+def test_not_nipsad_annotations_filters_by_nipsa():
+    query = search.not_nipsad_annotations("test_user_id")
+
+    must_clauses = query["query"]["filtered"]["filter"]["bool"]["must"]
+    assert {"not": {"term": {"not_in_public_site_areas": True}}} in (
+        must_clauses)

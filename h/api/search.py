@@ -170,3 +170,34 @@ def index(user=None):
 
     """
     return search(webob.multidict.NestedMultiDict({"limit": 20}), user=user)
+
+
+def query_for_users_annotations(user_id):
+    """Return an Elasticsearch query for all the given user's annotations."""
+    return {
+        "query": {
+            "filtered": {
+                "filter": {
+                    "bool": {
+                        "must": [{"term": {"user": user_id}}]
+                    }
+                }
+            }
+        }
+    }
+
+
+def nipsad_annotations(user_id):
+    """Return an Elasticsearch query for the user's NIPSA'd annotations."""
+    query = query_for_users_annotations(user_id)
+    query["query"]["filtered"]["filter"]["bool"]["must"].append(
+        {"term": {"not_in_public_site_areas": True}})
+    return query
+
+
+def not_nipsad_annotations(user_id):
+    """Return an Elasticsearch query for the user's non-NIPSA'd annotations."""
+    query = query_for_users_annotations(user_id)
+    query["query"]["filtered"]["filter"]["bool"]["must"].append(
+        {"not": {"term": {"not_in_public_site_areas": True}}})
+    return query
