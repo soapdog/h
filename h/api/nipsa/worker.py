@@ -2,8 +2,6 @@
 import json
 
 import annotator
-import elasticsearch
-import elasticsearch.helpers
 
 from h.api import search
 
@@ -30,11 +28,6 @@ def remove_nipsa_action(annotation):
     }
 
 
-def _es_client():
-    """Return an elasticsearch.Elasticsearch client object."""
-    return elasticsearch.Elasticsearch([{"host": "localhost", "port": 9200}])
-
-
 def add_or_remove_nipsa(user_id, action):
     """Add/remove the NIPSA flag to/from all of the user's annotations."""
     assert action in ("nipsa", "unnipsa")
@@ -44,16 +37,14 @@ def add_or_remove_nipsa(user_id, action):
     else:
         query = search.nipsad_annotations(user_id)
 
-    es_client = _es_client()
-
-    annotations = elasticsearch.helpers.scan(es_client, query=query, fields=[])
+    annotations = search.scan(query=query, fields=[])
 
     if action == "add":
         actions = [add_nipsa_action(a) for a in annotations]
     else:
         actions = [remove_nipsa_action(a) for a in annotations]
 
-    elasticsearch.helpers.bulk(es_client, actions)
+    search.bulk(actions)
 
 
 def _handle_message(_, message):

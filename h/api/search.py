@@ -7,11 +7,26 @@ stuff should be encapsulated in this module.
 import copy
 import logging
 
+import elasticsearch
+from elasticsearch import helpers
 import webob.multidict
 
 from h.api.models import Annotation
 
 log = logging.getLogger(__name__)
+
+
+def _es_client():
+    """Return an elasticsearch.Elasticsearch client object."""
+    return elasticsearch.Elasticsearch([{"host": "localhost", "port": 9200}])
+
+
+def scan(query, fields):
+    return helpers.scan(_es_client(), query=query, fields=fields)
+
+
+def bulk(actions):
+    return helpers.bulk(_es_client(), actions)
 
 
 def nipsa_filter(query, user_id=None):
