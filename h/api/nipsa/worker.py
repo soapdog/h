@@ -6,72 +6,88 @@ import elasticsearch
 import elasticsearch.helpers
 
 
-def _add_or_remove_nipsa_flags(user_id, add=True):
-    """Add or remove the NIPSA flag to or from the user's annotations.
-
-    :param user_id: the ID of the user whose annotations to edit
-    :type user_id: unicode
-
-    :param add: if True then add the NIPSA flag to all of the user's
-        annotations, if False remove it from them
-    :type add: bool
-
-    """
-    must_clauses = [{"term": {"user": user_id}}]
-
-    if add:
-        # If we're NIPSA'ing a user we want to find all their annotations that
-        # are not (yet) NIPSA'd.
-        must_clauses.append(
-            {"not": {"term": {"not_in_public_site_areas": True}}})
-    else:
-        # If we're un-NIPSA'ing a user we want to find all their annotations
-        # that are currently NIPSA'd.
-        must_clauses.append({"term": {"not_in_public_site_areas": True}})
-
-    query = {
+def _query_for_users_annotations(user_id):
+    """Return an Elasticsearch query for all the given user's annotations."""
+    return {
         "query": {
             "filtered": {
                 "filter": {
-                    "bool": {"must": must_clauses}
+                    "bool": {
+                        "must": [{"term": {"user": user_id}}]
+                    }
                 }
-            },
+            }
         }
     }
 
-    es_client = elasticsearch.Elasticsearch(
-        [{"host": "localhost", "port": 9200}])
 
-    actions = []
-    for annotation in elasticsearch.helpers.scan(es_client, query=query,
-                                                 fields=[]):
-        action = {
-            "_op_type": "update",
-            "_index": annotator.es.index,
-            "_type": "annotation",
-            "_id": annotation["_id"],
-        }
+def _nipsad_annotations(user_id):
+    """Return an Elasticsearch query for the user's NIPSA's annotations."""
+    query = _query_for_users_annotations(user_id)
+    query["query"]["filtered"]["filter"]["bool"]["must"].append(
+        {"term": {"not_in_public_site_areas": True}})
+    return query
 
-        if add:
-            # We want to add the nipsa flag to the annotations.
-            action["doc"] = {"not_in_public_site_areas": True}
-        else:
-            # We want to remove the nipsa flag from the annotations.
-            action["script"] = (
-                "ctx._source.remove(\"not_in_public_site_areas\")")
 
-        actions.append(action)
+def _not_nipsad_annotations(user_id):
+    """Return an Elasticsearch query for the user's non-NIPSA's annotations."""
+    query = _query_for_users_annotations(user_id)
+    query["query"]["filtered"]["filter"]["bool"]["must"].append(
+        {"not": {"term": {"not_in_public_site_areas": True}}})
+    return query
+
+
+def _add_nipsa_action(annotation):
+    """Return an Elasticsearch action for adding NIPSA to the annotation."""
+    return {
+        "_op_type": "update",
+        "_index": annotator.es.index,
+        "_type": "annotation",
+        "_id": annotation["_id"],
+        "doc": {"not_in_public_site_areas": True}
+    }
+
+
+def _remove_nipsa_action(annotation):
+    """Return an Elasticsearch action to remove NIPSA from the annotation."""
+    return {
+        "_op_type": "update",
+        "_index": annotator.es.index,
+        "_type": "annotation",
+        "_id": annotation["_id"],
+        "script": "ctx._source.remove(\"not_in_public_site_areas\")"
+    }
+
+
+def _es_client():
+    """Return an elasticsearch.Elasticsearch client object."""
+    return elasticsearch.Elasticsearch([{"host": "localhost", "port": 9200}])
+
+
+def _add_or_remove_nipsa(user_id, action):
+    """Add/remove the NIPSA flag to/from all of the user's annotations."""
+    assert action in ("nipsa", "unnipsa")
+
+    if action == "nipsa":
+        query = _not_nipsad_annotations(user_id)
+    else:
+        query = _nipsad_annotations(user_id)
+
+    es_client = _es_client()
+
+    annotations = elasticsearch.helpers.scan(es_client, query=query, fields=[])
+
+    if action == "add":
+        actions = [_add_nipsa_action(a) for a in annotations]
+    else:
+        actions = [_remove_nipsa_action(a) for a in annotations]
 
     elasticsearch.helpers.bulk(es_client, actions)
 
 
 def _handle_message(_, message):
     """Handle a message on the "nipsa_users_annotations" channel."""
-    message_data = json.loads(message.body)
-    if message_data["action"] == "nipsa":
-        _add_or_remove_nipsa_flags(message_data["user_id"], add=True)
-    elif message_data["action"] == "unnipsa":
-        _add_or_remove_nipsa_flags(message_data["user_id"], add=False)
+    _add_or_remove_nipsa(**json.loads(message.body))
 
 
 def user_worker(request):
