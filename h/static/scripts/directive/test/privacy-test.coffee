@@ -54,6 +54,9 @@ describe 'privacy', ->
     $scope = _$rootScope_.$new()
     $window = _$window_
 
+  beforeEach ->
+    $scope.$parent.setLevel = sandbox.stub()
+
   afterEach ->
     sandbox.restore()
 
