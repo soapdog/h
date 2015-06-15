@@ -39,7 +39,6 @@ def _add_or_remove_nipsa_flags(user_id, add=True):
         }
     }
 
-    # TODO: Get the host and port from the config.
     es_client = elasticsearch.Elasticsearch(
         [{"host": "localhost", "port": 9200}])
 
