@@ -8,7 +8,7 @@ import elasticsearch.helpers
 from h.api import search
 
 
-def _add_nipsa_action(annotation):
+def add_nipsa_action(annotation):
     """Return an Elasticsearch action for adding NIPSA to the annotation."""
     return {
         "_op_type": "update",
@@ -19,7 +19,7 @@ def _add_nipsa_action(annotation):
     }
 
 
-def _remove_nipsa_action(annotation):
+def remove_nipsa_action(annotation):
     """Return an Elasticsearch action to remove NIPSA from the annotation."""
     return {
         "_op_type": "update",
@@ -35,7 +35,7 @@ def _es_client():
     return elasticsearch.Elasticsearch([{"host": "localhost", "port": 9200}])
 
 
-def _add_or_remove_nipsa(user_id, action):
+def add_or_remove_nipsa(user_id, action):
     """Add/remove the NIPSA flag to/from all of the user's annotations."""
     assert action in ("nipsa", "unnipsa")
 
@@ -49,16 +49,16 @@ def _add_or_remove_nipsa(user_id, action):
     annotations = elasticsearch.helpers.scan(es_client, query=query, fields=[])
 
     if action == "add":
-        actions = [_add_nipsa_action(a) for a in annotations]
+        actions = [add_nipsa_action(a) for a in annotations]
     else:
-        actions = [_remove_nipsa_action(a) for a in annotations]
+        actions = [remove_nipsa_action(a) for a in annotations]
 
     elasticsearch.helpers.bulk(es_client, actions)
 
 
 def _handle_message(_, message):
     """Handle a message on the "nipsa_users_annotations" channel."""
-    _add_or_remove_nipsa(**json.loads(message.body))
+    add_or_remove_nipsa(**json.loads(message.body))
 
 
 def user_worker(request):
