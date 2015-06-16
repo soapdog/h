@@ -103,21 +103,21 @@
   position: relative;
 
   &.show-full-excerpt {
-    max-height: 100%
+    max-height: 100%;
   }
 
   .more {
-      top: 12em;
-      padding-top: 1.5em;
-      width: 100%;
-      height: 3em;
-      position: absolute;
-      z-index: 5;
-      background: -webkit-gradient(linear, left bottom, right bottom, from(rgba(255, 255, 255, 0)), to(white), color-stop(50%, white));
-      background: -moz-linear-gradient(to bottom, rgba(255, 255, 255, 0), white 50%, white);
-      background: -o-linear-gradient(to bottom, rgba(255, 255, 255, 0), white 50%, white);
-      background: -ms-linear-gradient(to bottom, rgba(255, 255, 255, 0), white 50%, white);
-      background: linear-gradient(to bottom, rgba(255, 255, 255, 0), white 50%, white);
+    top: 12em;
+    padding-top: 1.5em;
+    width: 100%;
+    height: 3em;
+    position: absolute;
+    z-index: 5;
+    background: -webkit-gradient(linear, left bottom, right bottom, from(rgba(255, 255, 255, 0)), to(white), color-stop(50%, white));
+    background: -moz-linear-gradient(to bottom, rgba(255, 255, 255, 0), white 50%, white);
+    background: -o-linear-gradient(to bottom, rgba(255, 255, 255, 0), white 50%, white);
+    background: -ms-linear-gradient(to bottom, rgba(255, 255, 255, 0), white 50%, white);
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0), white 50%, white);
   }
 }
 
