@@ -9,4 +9,4 @@ module.exports = ->
       elem.find('.less').on 'click', ->
         elem.find('.more').show()
         elem.removeClass('show-full-excerpt')
-  restrict: 'A'
+  restrict: 'C'
