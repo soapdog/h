@@ -4,6 +4,14 @@ const tabs = require("sdk/tabs");
 const { ToggleButton } = require("sdk/ui/button/toggle");
 var btnConfig = {};
 var btn;
+var ss = require("sdk/simple-storage");
+if (!ss.storage.pages) {
+  // This array will keep track on which pages the
+  // add-on should activate.
+  ss.storage.pages = [];
+}
+
+console.log("storage: ", ss.storage.pages);
 
 // NOTE: The 18 and 36 icons are actually 16x16 and 32x32 respectively as
 // FireFox will downscale 18x18 icons. I can't find any documentation on
@@ -35,13 +43,20 @@ function enable(tab) {
 }
 
 function disable(tab) {
-  tab.attach({
-    contentScript: [
-      'var s = document.createElement("script");',
-      's.setAttribute("src", "' + data.url('destroy.js') + '");',
-      'document.body.appendChild(s);'
-    ]
-  });
+
+   //TODO: The destroy.js script is not able to remove all scripts
+   //injected by hipothesis, reloading the tab solves that.
+
+   tab.attach({
+     contentScript: [
+       'var s = document.createElement("script");',
+       's.setAttribute("src", "' + data.url('destroy.js') + '");',
+       'document.body.appendChild(s);'
+     ]
+   });
+
+  //tab.reload();
+
 }
 
 function activate(btn, tab) {
@@ -50,6 +65,13 @@ function activate(btn, tab) {
     label: 'Annotating',
     icon: icons.active
   });
+
+  // Keep track of what pages we should activate the add-on
+  if (ss.storage.pages.indexOf(tab.url) !== -1) {
+    ss.storage.pages.push(tab.url);
+  }
+  console.log("activate storage: ", ss.storage.pages);
+
 }
 
 function deactivate(btn, tab) {
@@ -58,6 +80,13 @@ function deactivate(btn, tab) {
     label: 'Annotate',
     icon: icons.sleeping
   });
+
+  // Remove page from the tracked page array
+  ss.storage.pages = ss.storage.pages.filter(function(e){return e!==tab.url});
+
+  console.log("deactivate storage: ", ss.storage.pages);
+
+
 }
 
 btnConfig = {
@@ -90,6 +119,14 @@ tabs.on('pageshow', function onPageShow(tab) {
   } else {
     disable(tab);
   }
+
+  // check if it is a tracked page
+  if (ss.storage.pages.indexOf(tab.url) !== -1) {
+    console.log("activating because ss");
+    console.log(ss.storage.pages);
+    enable(tab);
+  }
+
 });
 
 tabs.on('open', function onTabOpen(tab) {
