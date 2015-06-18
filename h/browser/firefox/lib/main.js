@@ -57,7 +57,7 @@ function disable(tab) {
    //  ]
    //});
 
-  tab.reload();
+  //tab.reload();
 
 }
 
@@ -69,10 +69,12 @@ function activate(btn, tab) {
   });
 
   // Keep track of what pages we should activate the add-on
-  if (ss.storage.pages.indexOf(tab.url) !== -1) {
+  if (ss.storage.pages.indexOf(tab.url) === -1) {
     ss.storage.pages.push(tab.url);
   }
   console.log("activate storage: ", ss.storage.pages);
+  console.log("url: ", tab.url);
+
 
 }
 
@@ -124,8 +126,9 @@ tabs.on('pageshow', function onPageShow(tab) {
 
   // check if it is a tracked page
   if (ss.storage.pages.indexOf(tab.url) !== -1) {
-    console.log("activating because ss");
+    console.log("activating because it was active on this page before");
     console.log(ss.storage.pages);
+    activate(btn, tabs.activeTab);
     enable(tab);
   }
 
@@ -134,6 +137,8 @@ tabs.on('pageshow', function onPageShow(tab) {
 tabs.on('open', function onTabOpen(tab) {
   // h is off by default on new tabs
   deactivate(btn, tab);
+
+
 });
 
 exports.main = function main(options, callbacks) {
