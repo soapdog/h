@@ -45,17 +45,19 @@ function enable(tab) {
 function disable(tab) {
 
    //TODO: The destroy.js script is not able to remove all scripts
-   //injected by hipothesis, reloading the tab solves that.
+   //      injected by hipothesis, reloading the tab solves that.
+   //      I will keep working using the "reload solution" until Hipothesis script
+   //      is patched to hold references to the stuff I need to remove.
 
-   tab.attach({
-     contentScript: [
-       'var s = document.createElement("script");',
-       's.setAttribute("src", "' + data.url('destroy.js') + '");',
-       'document.body.appendChild(s);'
-     ]
-   });
+   //tab.attach({
+   //  contentScript: [
+   //    'var s = document.createElement("script");',
+   //    's.setAttribute("src", "' + data.url('destroy.js') + '");',
+   //    'document.body.appendChild(s);'
+   //  ]
+   //});
 
-  //tab.reload();
+  tab.reload();
 
 }
 
