@@ -57,7 +57,17 @@ function disable(tab) {
    //  ]
    //});
 
-  //tab.reload();
+  // check if it is a tracked page
+  if (ss.storage.pages.indexOf(tab.url) !== -1) {
+
+    // Remove page from the tracked page array
+    ss.storage.pages = ss.storage.pages.filter(function(e){return e!==tab.url});
+
+    console.log("deactivate storage: ", ss.storage.pages);
+
+    tab.reload();
+  }
+
 
 }
 
@@ -84,11 +94,6 @@ function deactivate(btn, tab) {
     label: 'Annotate',
     icon: icons.sleeping
   });
-
-  // Remove page from the tracked page array
-  ss.storage.pages = ss.storage.pages.filter(function(e){return e!==tab.url});
-
-  console.log("deactivate storage: ", ss.storage.pages);
 
 
 }
@@ -118,25 +123,29 @@ if (typeof ToggleButton === 'undefined') {
 }
 
 tabs.on('pageshow', function onPageShow(tab) {
-  if (btn.state(tab).checked) {
-    enable(tab);
-  } else {
-    disable(tab);
-  }
 
   // check if it is a tracked page
   if (ss.storage.pages.indexOf(tab.url) !== -1) {
     console.log("activating because it was active on this page before");
     console.log(ss.storage.pages);
     activate(btn, tabs.activeTab);
-    enable(tab);
   }
+
+  if (btn.state(tab).checked) {
+    enable(tab);
+  } else {
+    disable(tab);
+  }
+
+
 
 });
 
 tabs.on('open', function onTabOpen(tab) {
   // h is off by default on new tabs
-  deactivate(btn, tab);
+  // AAG: I don't think this is needed.
+
+  //deactivate(btn, tab);
 
 
 });
